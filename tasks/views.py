@@ -1,15 +1,20 @@
 from rest_framework import generics
+
 from .models import Task, Category, Tag
 from .serializers import (
     TaskListSerializer,
     TaskDetailSerializer,
     CategorySerializer,
-    TagSerializer
+    TagSerializer,
 )
 
 
 class TaskListCreateView(generics.ListCreateAPIView):
-    queryset = Task.objects.all().order_by("-created_at")
+    queryset = (
+        Task.objects.select_related("category")
+        .prefetch_related("tags")
+        .order_by("-created_at")
+    )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -18,7 +23,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Task.objects.all()
+    queryset = Task.objects.select_related("category").prefetch_related("tags")
     serializer_class = TaskDetailSerializer
 
 
